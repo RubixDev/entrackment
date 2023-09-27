@@ -1,0 +1,84 @@
+[application]
+
+# dioxus project name
+name = "watchlist"
+
+# default platfrom
+# you can also use `dx serve/build --platform XXX` to use other platform
+# value: web | desktop
+default_platform = "web"
+
+# Web `build` & `serve` dist path
+out_dir = "dist"
+
+# resource (static) file folder
+asset_dir = "public"
+
+[web.app]
+
+# HTML title tag content
+title = "Watchlist"
+
+[web.watcher]
+
+index_on_404 = true
+
+watch_path = ["src", "public"]
+
+# include `assets` in web platform
+[web.resource]
+
+# CSS style file
+style = [
+  "./style/theme.css",
+  "https://fonts.googleapis.com/css?family=Roboto:300,400,500",
+  "https://fonts.googleapis.com/css?family=Material+Icons&display=block",
+]
+
+# Javascript code file
+script = [
+  # modified from "https://cdn.jsdelivr.net/npm/html-duration-picker@2.4.0/dist/html-duration-picker.min.js",
+  "./html-duration-picker.min.js",
+]
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
+
+[[web.proxy]]
+backend = "http://192.168.0.173:19283/api/"
+
+[application.plugins]
+
+available = true
+
+required = []
+
+[bundler]
+# Bundle identifier
+identifier = "io.github.watchlist"
+
+# Bundle publisher
+publisher = "watchlist"
+
+# Bundle icon
+icon = ["icons/icon.png"]
+
+# Bundle resources
+resources = ["public/*"]
+
+# Bundle copyright
+copyright = ""
+
+# Bundle category
+category = "Utility"
+
+# Bundle short description
+short_description = "An amazing dioxus application."
+
+# Bundle long description
+long_description = """
+An amazing dioxus application.
+"""
