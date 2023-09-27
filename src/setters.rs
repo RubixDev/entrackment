@@ -1,7 +1,7 @@
 use std::collections::{btree_map::Entry, hash_map};
 
 use actix_web::{
-    patch, post, put,
+    delete, patch, post, put,
     web::{Data, Json, Path},
     HttpResponse, Responder,
 };
@@ -44,6 +44,18 @@ async fn patch_movie(data: Data<AppState>, Json(movie): Json<Movie>) -> impl Res
     }
 }
 
+#[delete("/api/movie/{id}")]
+async fn delete_movie(data: Data<AppState>, id: Path<u64>) -> impl Responder {
+    let mut data_lock = data.0.lock().await;
+    if data_lock.movies.remove(&id).is_none() {
+        return HttpResponse::NotFound().body(format!("movie with ID {id} does not exist"));
+    }
+    match crate::save_to_disk(&data_lock).await {
+        Ok(()) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().body("Failed to save new data to disk"),
+    }
+}
+
 #[post("/api/tag")]
 async fn post_tag(data: Data<AppState>, Json(tag): Json<Tag>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
@@ -72,6 +84,18 @@ async fn patch_tag(data: Data<AppState>, Json(tag): Json<Tag>) -> impl Responder
         hash_map::Entry::Occupied(mut entry) => {
             *entry.get_mut() = tag;
         }
+    }
+    match crate::save_to_disk(&data_lock).await {
+        Ok(()) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().body("Failed to save new data to disk"),
+    }
+}
+
+#[delete("/api/tag/{id}")]
+async fn delete_tag(data: Data<AppState>, id: Path<u32>) -> impl Responder {
+    let mut data_lock = data.0.lock().await;
+    if data_lock.tags.remove(&id).is_none() {
+        return HttpResponse::NotFound().body(format!("tag with ID {id} does not exist"));
     }
     match crate::save_to_disk(&data_lock).await {
         Ok(()) => HttpResponse::Ok().finish(),

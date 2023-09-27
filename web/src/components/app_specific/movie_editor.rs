@@ -24,9 +24,10 @@ use crate::{
     },
 };
 
-#[derive(Props, PartialEq)]
-pub struct MovieEditorProps {
+#[derive(Props)]
+pub struct MovieEditorProps<'a> {
     create_tag_dialog_open: UseState<bool>,
+    ondelete: Option<EventHandler<'a, ()>>,
     #[props(!optional)]
     imdb_id: Option<u32>,
     tmdb_id: u64,
@@ -40,8 +41,9 @@ pub struct MovieEditorProps {
     score: f64,
 }
 
-pub fn MovieEditor(cx: Scope<MovieEditorProps>) -> Element {
+pub fn MovieEditor<'a>(cx: Scope<'a, MovieEditorProps<'a>>) -> Element<'a> {
     let MovieEditorProps {
+        ondelete,
         create_tag_dialog_open,
         imdb_id,
         tmdb_id,
@@ -106,6 +108,19 @@ pub fn MovieEditor(cx: Scope<MovieEditorProps>) -> Element {
                     }
                 }
             })
+            if let Some(ondelete) = ondelete {
+                rsx! {
+                    span {
+                        onclick: move |_| ondelete.call(()),
+                        MatButton {
+                            label: "delete",
+                            icon: "delete",
+                            trailing_icon: true,
+                            style: "--mdc-theme-primary: var(--mdc-theme-error)",
+                        }
+                    }
+                }
+            }
         }
 
         div { display: "grid", grid_template_columns: "1fr 2fr", gap: "0.5rem",
@@ -284,6 +299,21 @@ fn EditTagDialog<'a>(cx: Scope, open: UseState<bool>, tag: &'a Tag) -> Element {
             }
         }
     };
+    let delete_tag = move || {
+        page.set(Page::Loading);
+        let id = tag.id;
+        let req = crate::CLIENT.delete(format!("{0}/api/tag/{id}", &*crate::BASE_URL));
+        to_owned![page, error, open, app_state];
+        async move {
+            if let Err(err) = api::send_request(req, api::no_body).await {
+                error.set(err.to_string());
+                page.set(Page::Error);
+            } else {
+                open.set(false);
+                app_state.write().tags.remove(&id);
+            }
+        }
+    };
 
     let body = match page.get() {
         Page::Edit => rsx! {
@@ -291,7 +321,8 @@ fn EditTagDialog<'a>(cx: Scope, open: UseState<bool>, tag: &'a Tag) -> Element {
                 id: tag.id,
                 name: name.clone(),
                 color: color.clone(),
-                icon: icon.clone()
+                icon: icon.clone(),
+                ondelete: move |_| cx.spawn(delete_tag()),
             }
             span { slot: ActionType::Primary.as_str(), onclick: move |_| cx.spawn(patch_tag()), MatButton { label: "submit" } }
         },

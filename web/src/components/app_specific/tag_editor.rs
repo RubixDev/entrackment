@@ -12,20 +12,37 @@ use crate::components::general::{Chip, ColorInput};
 const ICONS: &[&str] = &["people", "reset_tv", "question_mark"];
 
 #[inline_props]
-pub fn TagEditor(
+pub fn TagEditor<'a>(
     cx: Scope,
     id: u32,
     name: UseState<String>,
     color: UseState<Color>,
     icon: UseState<Option<Cow<'static, str>>>,
+    ondelete: Option<EventHandler<'a, ()>>,
 ) -> Element {
     render! {
-        Chip {
-            label: "{name}",
-            color: **color,
-            icon_left: &MdLabelOutline,
-            icon_right: icon.get().clone(),
-            icon_size: "1.3em"
+        span {
+            class: "spaced-list",
+            Chip {
+                label: "{name}",
+                color: **color,
+                icon_left: &MdLabelOutline,
+                icon_right: icon.get().clone(),
+                icon_size: "1.3em"
+            }
+            if let Some(ondelete) = ondelete {
+                rsx! {
+                    span {
+                        onclick: move |_| ondelete.call(()),
+                        MatButton {
+                            label: "delete",
+                            icon: "delete",
+                            trailing_icon: true,
+                            style: "--mdc-theme-primary: var(--mdc-theme-error)",
+                        }
+                    }
+                }
+            }
         }
         div { display: "grid", gap: "0.5rem", grid_template_columns: "1fr 2fr", margin_top: "1rem",
 

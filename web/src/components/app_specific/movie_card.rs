@@ -578,10 +578,26 @@ fn EditDialog<'a>(
             }
         }
     };
+    let ondelete = move || {
+        page.set(Page::Loading);
+        let id = movie.tmdb_id;
+        let req = crate::CLIENT.delete(format!("{0}/api/movie/{id}", &*crate::BASE_URL));
+        to_owned![page, error, open, app_state];
+        async move {
+            if let Err(err) = api::send_request(req, api::no_body).await {
+                error.set(err.to_string());
+                page.set(Page::Error);
+            } else {
+                open.set(false);
+                app_state.write().movies.remove(&id);
+            }
+        }
+    };
 
     let body = match page.get() {
         Page::Input => rsx! {
             MovieEditor {
+                ondelete: move |_| cx.spawn(ondelete()),
                 create_tag_dialog_open: create_tag_dialog_open.clone(),
                 imdb_id: movie.imdb_id,
                 tmdb_id: movie.tmdb_id,
