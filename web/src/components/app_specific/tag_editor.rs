@@ -9,7 +9,14 @@ use schema::Color;
 
 use crate::components::general::{Chip, ColorInput};
 
-const ICONS: &[&str] = &["people", "reset_tv", "question_mark"];
+const ICONS: &[&str] = &[
+    "people",
+    "reset_tv",
+    "question_mark",
+    "emoji_people",
+    "view_in_ar",
+    "draw",
+];
 
 #[inline_props]
 pub fn TagEditor<'a>(
