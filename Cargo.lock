@@ -4395,6 +4395,7 @@ dependencies = [
  "dioxus-free-icons",
  "dioxus-std",
  "dioxus-web",
+ "gloo-events",
  "humantime",
  "itertools",
  "material-dioxus",

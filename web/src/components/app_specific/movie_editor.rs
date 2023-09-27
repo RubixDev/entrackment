@@ -71,7 +71,7 @@ pub fn MovieEditor<'a>(cx: Scope<'a, MovieEditorProps<'a>>) -> Element<'a> {
 
     let poster = match poster.get() {
         Some(path) => {
-            rsx! { img { class: "{img}", src: "{&*crate::BASE_URL}/api/posters/big{path}" } }
+            rsx! { img { class: "{img}", src: "{&*crate::BASE_URL}/api/posters/big{path}", "loading": "lazy" } }
         }
         None => rsx! {
             div {

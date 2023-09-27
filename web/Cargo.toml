@@ -24,6 +24,7 @@ thiserror = "1.0.48"
 [target.'cfg(target_family = "wasm")'.dependencies]
 dioxus-std = { version = "0.4.0", features = ["color_scheme"] }
 web-sys = { version = "0.3.64", features = ["Window", "Location"] }
+gloo-events = "0.2.0"
 dioxus-web = "0.4.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

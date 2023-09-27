@@ -93,24 +93,24 @@ pub fn MovieCard(cx: Scope, movie: Movie, create_tag_dialog_open: UseState<bool>
             }
 
             &:not(.expanded) {
-                &.bg-poster {
-                    background-image: var(--poster-url);
-                    background-origin: border-box;
-                    background-clip: border-box;
-                    background-repeat: repeat-y;
-                    background-size: 100vw auto;
-                    background-attachment: fixed;
-                    background-position-x: center;
-
-                    &::before {
-                        content: '';
-                        position: absolute;
-                        inset: 0;
-                        z-index: -1;
-                        background-color: var(--clr-bg);
-                        opacity: 80%;
-                    }
-                }
+                // &.bg-poster {
+                //     background-image: var(--poster-url);
+                //     background-origin: border-box;
+                //     background-clip: border-box;
+                //     background-repeat: repeat-y;
+                //     background-size: 100vw auto;
+                //     background-attachment: fixed;
+                //     background-position-x: center;
+                //
+                //     &::before {
+                //         content: '';
+                //         position: absolute;
+                //         inset: 0;
+                //         z-index: -1;
+                //         background-color: var(--clr-bg);
+                //         opacity: 80%;
+                //     }
+                // }
 
                 .img {
                     display: none !important;
@@ -145,7 +145,8 @@ pub fn MovieCard(cx: Scope, movie: Movie, create_tag_dialog_open: UseState<bool>
             rsx! {
                 img {
                     src: "{poster_url}",
-                    class: "img{expanded_class}"
+                    class: "img{expanded_class}",
+                    "loading": "lazy",
                 }
             }
         }
