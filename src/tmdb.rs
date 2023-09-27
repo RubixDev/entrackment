@@ -10,9 +10,9 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use itertools::Itertools;
-use schema::{Movie, MovieStub};
+use schema::{Movie, MovieStub, Platform};
 use tmdb_api::{
-    movie::{details::MovieDetails, search::MovieSearch},
+    movie::{details::MovieDetails, search::MovieSearch, watch_providers::MovieWatchProviders},
     prelude::Command,
 };
 
@@ -119,6 +119,29 @@ async fn by_id(data: Data<AppState>, Query(ByIdQuery { id }): Query<ByIdQuery>) 
                 },
             };
 
+            // powered by JustWatch
+            let platforms = match MovieWatchProviders::new(tmdb_id).execute(&TMDB).await {
+                Ok(providers) => {
+                    let mut platforms = BTreeSet::new();
+                    if let Some(au) = providers.results.get("AU") {
+                        for provider in &au.flatrate {
+                            // Disney Plus: 337
+                            // Netflix: 8
+                            // Amazon Prime Video: 119
+                            if provider.provider_id == 337 {
+                                platforms.insert(Platform::DisneyPlus);
+                            } else if provider.provider_id == 8 {
+                                platforms.insert(Platform::Netflix);
+                            } else if provider.provider_id == 119 {
+                                platforms.insert(Platform::PrimeVideo);
+                            }
+                        }
+                    }
+                    platforms
+                }
+                Err(err) => return HttpResponse::ServiceUnavailable().body(err_to_string(err)),
+            };
+
             let tmdb_movie = match MovieDetails::new(tmdb_id).execute(&TMDB).await {
                 Ok(movie) => movie,
                 Err(err) => return HttpResponse::ServiceUnavailable().body(err_to_string(err)),
@@ -135,7 +158,7 @@ async fn by_id(data: Data<AppState>, Query(ByIdQuery { id }): Query<ByIdQuery>) 
                 description: tmdb_movie.inner.overview,
                 ratings: vec![],
                 tags: BTreeSet::new(),
-                platforms: BTreeSet::new(),
+                platforms,
                 poster: tmdb_movie.inner.poster_path,
                 release_date: tmdb_movie.inner.release_date.unwrap_or_default(),
                 runtime: Duration::from_secs(tmdb_movie.runtime.unwrap_or(0) * 60),

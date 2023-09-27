@@ -9,7 +9,11 @@ use tokio::fs::{self, File};
 
 use crate::{CLIENT, POSTERS_DIR};
 
-async fn get_poster(name: web::Path<String>, dir: &str, size: &str) -> Either<HttpResponse, io::Result<NamedFile>> {
+async fn get_poster(
+    name: web::Path<String>,
+    dir: &str,
+    size: &str,
+) -> Either<HttpResponse, io::Result<NamedFile>> {
     let name = name.into_inner();
     let path = Path::new(POSTERS_DIR).join(dir).join(&name);
     match File::open(&path).await {

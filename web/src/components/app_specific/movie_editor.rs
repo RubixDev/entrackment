@@ -163,7 +163,16 @@ pub fn MovieEditor(cx: Scope<MovieEditorProps>) -> Element {
                 }
             }
 
-            span { "Platforms:" }
+            span {
+                span { "Platforms:" }
+                div {
+                    font_size: "0.8em",
+                    color: "var(--mdc-theme-text-disabled-on-background)",
+                    margin_top: "0.5rem",
+                    line_height: "normal",
+                    "powered by JustWatch"
+                }
+            }
             MatList {
                 multi: true,
                 _onaction: {
