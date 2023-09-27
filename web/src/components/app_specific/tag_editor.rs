@@ -16,6 +16,7 @@ const ICONS: &[&str] = &[
     "emoji_people",
     "view_in_ar",
     "draw",
+    "music_note",
 ];
 
 #[inline_props]

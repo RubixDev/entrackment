@@ -87,6 +87,7 @@ fn App(cx: Scope) -> Element {
     let add_movie_dialog_open = use_state(cx, || false);
     let create_tag_dialog_open = use_state(cx, || false);
     let filter = use_state(cx, || Box::new(|_: &&Movie| true) as FilterCallback);
+    // TODO: this must be reset when the filter changes
     let max_show_count = use_state(cx, || 0);
     #[cfg(target_family = "wasm")]
     let scroll_listener = cx.use_hook(|| None);
