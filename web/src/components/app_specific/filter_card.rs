@@ -8,7 +8,7 @@ use crate::components::general::Card;
 pub type FilterCallback = Box<dyn Fn(&&Movie) -> bool>;
 
 #[inline_props]
-pub fn FilterCard(cx: Scope, callback: UseState<FilterCallback>) -> Element {
+pub fn FilterCard(cx: Scope, callback: UseState<FilterCallback>, max_show_count: UseState<usize>) -> Element {
     let show_seen = use_state(cx, || false);
     let show_unseen = use_state(cx, || true);
     let search = use_state(cx, String::new);
@@ -44,10 +44,10 @@ pub fn FilterCard(cx: Scope, callback: UseState<FilterCallback>) -> Element {
             MatSwitch {
                 selected: **show_seen,
                 _onclick: {
-                    to_owned![show_seen, callback];
+                    to_owned![show_seen, max_show_count];
                     move |_| {
                         show_seen.set(!show_seen.get());
-                        callback.needs_update();
+                        max_show_count.set(3);
                     }
                 }
             }
@@ -56,10 +56,10 @@ pub fn FilterCard(cx: Scope, callback: UseState<FilterCallback>) -> Element {
             MatSwitch {
                 selected: **show_unseen,
                 _onclick: {
-                    to_owned![show_unseen, callback];
+                    to_owned![show_unseen, max_show_count];
                     move |_| {
                         show_unseen.set(!show_unseen.get());
-                        callback.needs_update();
+                        max_show_count.set(3);
                     }
                 }
             }
@@ -71,10 +71,10 @@ pub fn FilterCard(cx: Scope, callback: UseState<FilterCallback>) -> Element {
             outlined: true,
             field_type: TextFieldType::Search,
             _oninput: {
-                to_owned![search, callback];
+                to_owned![search, max_show_count];
                 move |new_value| {
                     search.set(new_value);
-                    callback.needs_update();
+                    max_show_count.set(3);
                 }
             }
         }

@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use dioxus::prelude::*;
 use itertools::Itertools;
-use material_dioxus::{theming::Colors, MatFab, MatTheme};
+use material_dioxus::{theming::Colors, MatFab, MatTheme, MatButton};
 use once_cell::sync::Lazy;
 use reqwest::Client;
 use schema::{Movie, Tag};
@@ -87,23 +87,22 @@ fn App(cx: Scope) -> Element {
     let add_movie_dialog_open = use_state(cx, || false);
     let create_tag_dialog_open = use_state(cx, || false);
     let filter = use_state(cx, || Box::new(|_: &&Movie| true) as FilterCallback);
-    // TODO: this must be reset when the filter changes
-    let max_show_count = use_state(cx, || 0);
-    #[cfg(target_family = "wasm")]
-    let scroll_listener = cx.use_hook(|| None);
+    let mut max_show_count = use_state(cx, || 3);
+    // #[cfg(target_family = "wasm")]
+    // let scroll_listener = cx.use_hook(|| None);
 
-    #[cfg(target_family = "wasm")]
-    fn on_scroll(mut max_show_count: UseState<usize>) {
-        let window = web_sys::window().unwrap();
-        let body = window.document().unwrap().body().unwrap();
-        if 3. * window.inner_height().unwrap().as_f64().unwrap() + window.scroll_y().unwrap()
-            >= body.offset_height() as f64
-        {
-            max_show_count += 1;
-        }
-    }
-    #[cfg(not(target_family = "wasm"))]
-    fn on_scroll(_: UseState<usize>) {}
+    // #[cfg(target_family = "wasm")]
+    // fn on_scroll(mut max_show_count: UseState<usize>) {
+    //     let window = web_sys::window().unwrap();
+    //     let body = window.document().unwrap().body().unwrap();
+    //     if 3. * window.inner_height().unwrap().as_f64().unwrap() + window.scroll_y().unwrap()
+    //         >= body.offset_height() as f64
+    //     {
+    //         max_show_count += 1;
+    //     }
+    // }
+    // #[cfg(not(target_family = "wasm"))]
+    // fn on_scroll(_: UseState<usize>) {}
 
     let fab = css!(
         "
@@ -114,20 +113,21 @@ fn App(cx: Scope) -> Element {
     "
     );
 
-    let movie_list = rsx! {
-        for movie in app_state
+    let mut filtered_movies = app_state
             .read()
             .movies
             .values()
             .filter(|m| filter.get()(m))
-            .sorted_by_key(|m| &m.title)
             .cloned()
-            .take(**max_show_count)
-        {
-            pre {
-                hidden: true,
-                onmounted: move |_| on_scroll(max_show_count.clone()),
-            }
+            .collect_vec();
+    filtered_movies.sort_by_key(|m| m.title.clone());
+    let filtered_movies_len = filtered_movies.len();
+    let movie_list = rsx! {
+        for movie in filtered_movies.into_iter().take(**max_show_count) {
+            // pre {
+            //     hidden: true,
+            //     onmounted: move |_| on_scroll(max_show_count.clone()),
+            // }
             MovieCard {
                 key: "{movie.tmdb_id}",
                 movie: movie,
@@ -155,22 +155,32 @@ fn App(cx: Scope) -> Element {
             margin: "auto",
             padding: "1rem 1rem 5rem",
             max_width: "60rem",
-            onmounted: move |_| {
-                to_owned![max_show_count];
-                on_scroll(max_show_count.clone());
-                #[cfg(target_family = "wasm")]
-                {
-                    *scroll_listener = Some(gloo_events::EventListener::new(
-                        &web_sys::window().unwrap(),
-                        "scroll",
-                        move |_| on_scroll(max_show_count.clone()),
-                    ));
-                }
-            },
-            FilterCard { callback: filter.clone() }
+            // onmounted: move |_| {
+                // to_owned![max_show_count];
+                // on_scroll(max_show_count.clone());
+                // #[cfg(target_family = "wasm")]
+                // {
+                //     *scroll_listener = Some(gloo_events::EventListener::new(
+                //         &web_sys::window().unwrap(),
+                //         "scroll",
+                //         move |_| on_scroll(max_show_count.clone()),
+                //     ));
+                // }
+            // },
+            FilterCard { callback: filter.clone(), max_show_count: max_show_count.clone() }
             match error.get() {
                 Some(error) => rsx! { div { color: "red", "{error}" } },
                 None => movie_list,
+            }
+            if **max_show_count < filtered_movies_len {
+                rsx! {
+                    span {
+                        display: "flex",
+                        justify_content: "center",
+                        onclick: move |_| max_show_count += 10,
+                        MatButton { label: "load more" }
+                    }
+                }
             }
         }
         span { onclick: move |_| add_movie_dialog_open.set(true), MatFab { class: "{fab}", icon: "add" } }
