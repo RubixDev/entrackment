@@ -536,6 +536,7 @@ fn EditDialog<'a>(
     let app_state = crate::use_app_state(cx);
 
     // hooks for Page::Input
+    let tmdb_id = cx.use_hook(|| movie.tmdb_id);
     let title = use_state(cx, || movie.title.clone());
     let description = use_state(cx, || movie.description.clone());
     let tags = use_state(cx, || movie.tags.clone());
@@ -543,6 +544,17 @@ fn EditDialog<'a>(
     let poster = use_state(cx, || movie.poster.clone());
     let release_date = use_state(cx, || movie.release_date);
     let runtime = use_state(cx, || movie.runtime);
+    // make sure to reset the states in case the dialog's movie changed
+    if *tmdb_id != movie.tmdb_id {
+        *tmdb_id = movie.tmdb_id;
+        title.set(movie.title.clone());
+        description.set(movie.description.clone());
+        tags.set(movie.tags.clone());
+        platforms.set(movie.platforms.clone());
+        poster.set(movie.poster.clone());
+        release_date.set(movie.release_date);
+        runtime.set(movie.runtime);
+    }
 
     // hooks for Page::Error
     let error = use_state(cx, String::new);
