@@ -10,13 +10,15 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use itertools::Itertools;
-use schema::{Movie, MovieStub, Platform};
 use tmdb_api::{
     movie::{details::MovieDetails, search::MovieSearch, watch_providers::MovieWatchProviders},
     prelude::Command,
 };
 
-use crate::{AppState, TMDB};
+use crate::{
+    schema::{Movie, MovieStub, Platform},
+    AppState, TMDB,
+};
 
 #[derive(serde::Deserialize)]
 struct SearchQuery {
@@ -24,17 +26,13 @@ struct SearchQuery {
 }
 
 fn err_to_string(error: tmdb_api::error::Error) -> String {
+    use tmdb_api::error::Error;
     match error {
-        tmdb_api::error::Error::Reqwest(err) => err.to_string(),
-        tmdb_api::error::Error::Server(err) => format!(
-            "server error {}: {}",
-            err.code,
-            match err.body {
-                tmdb_api::error::ServerBodyError::Validation(err) =>
-                    format!("validation errors: {}", err.errors.join(", ")),
-                tmdb_api::error::ServerBodyError::Other(err) =>
-                    format!("body error {}: {}", err.status_code, err.status_message),
-            }
+        Error::Request { source } | Error::Response { source } => source.to_string(),
+        Error::Validation(err) => format!("server validation error: {}", err.errors.join(", ")),
+        Error::Server { code, content } => format!(
+            "server error {code}: {} {}",
+            content.status_code, content.status_message,
         ),
     }
 }
@@ -123,8 +121,8 @@ async fn by_id(data: Data<AppState>, Query(ByIdQuery { id }): Query<ByIdQuery>) 
             let platforms = match MovieWatchProviders::new(tmdb_id).execute(&TMDB).await {
                 Ok(providers) => {
                     let mut platforms = BTreeSet::new();
-                    if let Some(au) = providers.results.get("AU") {
-                        for provider in &au.flatrate {
+                    if let Some(de) = providers.results.get("DE") {
+                        for provider in &de.flatrate {
                             // Disney Plus: 337
                             // Netflix: 8
                             // Amazon Prime Video: 119
