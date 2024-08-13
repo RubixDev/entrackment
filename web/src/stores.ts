@@ -15,7 +15,18 @@ export const allBooks: Writable<Book[]> = writable([])
 export const filteredBooks: Writable<Book[]> = writable([])
 export const fetching = writable(false)
 
-export const PLATFORMS = ['Disney+', 'Jellyfin', 'Netflix', 'Prime Video', 'YouTube', 'DVD', 'BluRay', 'Cinema', 'TV']
+export const PLATFORMS = [
+    'Disney+',
+    'Jellyfin',
+    'Netflix',
+    'Prime Video',
+    'YouTube',
+    'DVD',
+    'BluRay',
+    'Cinema',
+    'TV',
+    'Airplane',
+]
 
 export async function fetchApi<T>(request: Promise<Response>, hasBody: boolean = true): Promise<string | T> {
     const response = await request

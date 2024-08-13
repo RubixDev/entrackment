@@ -106,6 +106,7 @@ pub enum Platform {
     #[serde(rename = "TV")]
     #[strum(serialize = "TV")]
     Tv,
+    Airplane,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

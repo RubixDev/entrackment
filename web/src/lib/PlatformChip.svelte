@@ -71,6 +71,13 @@
                 path: 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z',
             }
             break
+        case 'Airplane':
+            color = [249, 159, 28]
+            icon = {
+                viewBox: '0 0 24 24',
+                path: 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z',
+            }
+            break
         default:
             throw `unknown platform '${platform}'`
     }
