@@ -112,6 +112,9 @@ pub enum Platform {
     #[strum(serialize = "TV")]
     Tv,
     Airplane,
+    #[serde(rename = "Apple TV")]
+    #[strum(serialize = "Apple TV")]
+    AppleTv,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

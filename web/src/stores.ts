@@ -26,6 +26,7 @@ export const PLATFORMS = [
     'Cinema',
     'TV',
     'Airplane',
+    'Apple TV',
 ]
 
 export async function fetchApi<T>(request: Promise<Response>, hasBody: boolean = true): Promise<string | T> {
