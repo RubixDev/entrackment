@@ -5,10 +5,11 @@
     import TextfieldIcon from '@smui/textfield/icon'
     import List, { Item, Graphic, Label as ItemLabel } from '@smui/list'
     import Radio from '@smui/radio'
+    import IconButton from '@smui/icon-button'
 
     import LoadingPage from './LoadingPage.svelte'
     import ErrorPage from './ErrorPage.svelte'
-    import type { Rating } from '../../stores'
+    import type { Movie, Rating } from '../../stores'
     import RatingDisplay from '../RatingDisplay.svelte'
     import { allMovies, fetchApi, PLATFORMS } from '../../stores'
     import PlatformChip from '../PlatformChip.svelte'
@@ -29,6 +30,7 @@
     let page = Page.List
     let error = ''
 
+    let origDate: string | null = null
     let date = new Date().toISOString().substring(0, 10)
     let rating = 6
     let platform: string = ''
@@ -43,8 +45,8 @@
             speed,
         }
         const res = await fetchApi(
-            fetch(`/api/movie/${movieId}/rating`, {
-                method: 'PUT',
+            fetch(`/api/movie/${movieId}/rating?date=${origDate}`, {
+                method: origDate !== null ? 'PATCH' : 'PUT',
                 body: JSON.stringify(newRating),
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,9 +60,29 @@
             return
         }
         page = Page.List
-        const movie = $allMovies.find(m => m.tmdb_id === movieId)
-        movie?.ratings.push(newRating)
-        movie?.ratings.sort((a, b) => b.date.localeCompare(a.date))
+        const movie = $allMovies.find(m => m.tmdb_id === movieId) as Movie
+        if (origDate !== null) {
+            movie.ratings = movie.ratings.filter(r => r.date !== origDate)
+        }
+        movie.ratings.push(newRating)
+        movie.ratings.sort((a, b) => b.date.localeCompare(a.date))
+        $allMovies = $allMovies
+    }
+
+    async function deleteRating() {
+        page = Page.Loading
+        const res = await fetchApi(
+            fetch(`/api/movie/${movieId}/rating?date=${origDate}`, { method: 'DELETE' }),
+            false,
+        )
+        if (typeof res === 'string') {
+            error = res
+            page = Page.Error
+            return
+        }
+        page = Page.List
+        const movie = $allMovies.find(m => m.tmdb_id === movieId) as Movie
+        movie.ratings = movie.ratings.filter(r => r.date !== origDate)
         $allMovies = $allMovies
     }
 </script>
@@ -73,13 +95,12 @@
         {:else if page === Page.Error}
             <ErrorPage {error} />
         {:else if page === Page.List}
-            <div class="grid">
-                <span>Average:</span>
+            <div class="grid list">
+                <strong>Average:</strong>
                 <div class="average">
                     {#if ratings.length !== 0}
                         <RatingDisplay
                             interactive={false}
-                            height="1.3rem"
                             style="display: inline-flex;"
                             value={Math.round(average)}
                         />
@@ -88,28 +109,53 @@
                         N/A
                     {/if}
                 </div>
+                <div />
 
                 {#each ratings as r (r.date)}
                     <span>{new Date(r.date).toLocaleDateString()}</span>
                     <div class="spaced-list">
-                        <RatingDisplay interactive={false} height="1rem" value={r.rating} />
+                        <RatingDisplay interactive={false} height="1.5rem" value={r.rating} />
                         {#if r.platform !== null}
                             <span>on</span>
                             <PlatformChip platform={r.platform} />
                         {/if}
                         <span>at {r.speed.toFixed(2)}x</span>
                     </div>
+                    <IconButton
+                        class="material-icons"
+                        on:click={() => {
+                            origDate = r.date
+                            date = r.date
+                            rating = r.rating
+                            platform = r.platform || ''
+                            speed = r.speed
+                            page = Page.Input
+                        }}>edit</IconButton
+                    >
                 {/each}
             </div>
             <Button
                 style="margin-top: 0.5rem;"
-                on:click={() => (page = Page.Input)}
+                on:click={() => {
+                    origDate = null
+                    date = new Date().toISOString().substring(0, 10)
+                    rating = 6
+                    platform = ''
+                    speed = 1
+                    page = Page.Input
+                }}
                 variant="outlined"
             >
                 <Icon class="material-icons">add</Icon>
                 <Label>add new</Label>
             </Button>
         {:else if page === Page.Input}
+            {#if origDate !== null}
+                <Button on:click={deleteRating} class="red-button">
+                    <Label>delete</Label>
+                    <Icon class="material-icons">delete</Icon>
+                </Button>
+            {/if}
             <div class="grid">
                 <span>Date:</span>
                 <Textfield bind:value={date} label="Date" type="date" variant="filled">
@@ -165,7 +211,7 @@
         </Button>
         {#if page === Page.Input}
             <Button on:click={submit}>
-                <Label>add</Label>
+                <Label>{origDate !== null ? 'submit' : 'add'}</Label>
             </Button>
         {/if}
     </Actions>
@@ -177,6 +223,10 @@
         grid-template-columns: 1fr 2fr;
         gap: 0.5rem;
         align-items: center;
+
+        &.list {
+            grid-template-columns: 1fr 2fr 0fr;
+        }
     }
 
     .average {

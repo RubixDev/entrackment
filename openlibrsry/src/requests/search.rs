@@ -2,7 +2,7 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use struct_field_names_as_array::FieldNamesAsSlice;
 
-use crate::{OlId, Key, OpenLibRequest};
+use crate::{Key, OlId, OpenLibRequest};
 
 #[derive(Debug, Clone, Copy, Default, strum::Display)]
 #[non_exhaustive]

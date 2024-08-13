@@ -1,4 +1,7 @@
-use std::collections::{btree_map::Entry, hash_map, BTreeMap};
+use std::{
+    cmp,
+    collections::{btree_map::Entry, hash_map, BTreeMap},
+};
 
 use actix_web::{
     delete, patch, post, put,
@@ -116,7 +119,10 @@ async fn movie_put_rating(
     let mut data_lock = data.0.lock().await;
     match data_lock.movies.get_mut(&id) {
         Some(movie) => {
-            let insert_index = match movie.ratings.binary_search_by_key(&rating.date, |w| w.date) {
+            let insert_index = match movie
+                .ratings
+                .binary_search_by_key(&cmp::Reverse(rating.date), |w| cmp::Reverse(w.date))
+            {
                 Ok(_) => {
                     return HttpResponse::Conflict().body(format!(
                         "movie with ID {id} already has a rating set for {}",
@@ -135,22 +141,40 @@ async fn movie_put_rating(
     }
 }
 
+#[derive(serde::Deserialize)]
+struct RatingDateQuery {
+    date: NaiveDate,
+}
+
 #[patch("/api/movie/{id}/rating")]
 async fn movie_patch_rating(
     data: Data<AppState>,
     id: Path<u64>,
+    Query(RatingDateQuery { date }): Query<RatingDateQuery>,
     Json(rating): Json<Rating>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     match data_lock.movies.get_mut(&id) {
-        Some(movie) => match movie.ratings.binary_search_by_key(&rating.date, |w| w.date) {
-            Ok(idx) => {
-                movie.ratings[idx] = rating;
+        Some(movie) => match movie
+            .ratings
+            .binary_search_by_key(&cmp::Reverse(date), |w| cmp::Reverse(w.date))
+        {
+            Ok(old_idx) => {
+                if date == rating.date {
+                    movie.ratings[old_idx] = rating;
+                } else {
+                    movie.ratings.remove(old_idx);
+                    let new_idx = movie
+                        .ratings
+                        .binary_search_by_key(&cmp::Reverse(rating.date), |w| cmp::Reverse(w.date))
+                        .expect_err("the only rating with this date was just removed");
+                    movie.ratings.insert(new_idx, rating);
+                }
             }
             Err(_) => {
                 return HttpResponse::NotFound().body(format!(
                     "movie with ID {id} has no rating set for {}",
-                    rating.date.format("%Y-%m-%d")
+                    date.format("%Y-%m-%d")
                 ))
             }
         },
@@ -166,11 +190,14 @@ async fn movie_patch_rating(
 async fn movie_delete_rating(
     data: Data<AppState>,
     id: Path<u64>,
-    Json(date): Json<NaiveDate>,
+    Query(RatingDateQuery { date }): Query<RatingDateQuery>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     match data_lock.movies.get_mut(&id) {
-        Some(movie) => match movie.ratings.binary_search_by_key(&date, |w| w.date) {
+        Some(movie) => match movie
+            .ratings
+            .binary_search_by_key(&cmp::Reverse(date), |w| cmp::Reverse(w.date))
+        {
             Ok(idx) => {
                 movie.ratings.remove(idx);
             }
@@ -262,7 +289,8 @@ async fn book_delete_reading(
     match data_lock.books.get_mut(&id) {
         Some(book) => {
             if *idx >= book.readings.len() {
-                return HttpResponse::NotFound().body(format!("book with ID {id} has no reading with index {idx}"));
+                return HttpResponse::NotFound()
+                    .body(format!("book with ID {id} has no reading with index {idx}"));
             }
             book.readings.remove(*idx);
         }
@@ -279,6 +307,7 @@ async fn book_reading_set_for_date(
     data: Data<AppState>,
     id: Path<OlId>,
     idx: Path<usize>,
+    // TODO: this query usage is wrong
     Query(date): Query<NaiveDate>,
     Query(pages): Query<u16>,
 ) -> impl Responder {
@@ -286,7 +315,8 @@ async fn book_reading_set_for_date(
     match data_lock.books.get_mut(&id) {
         Some(book) => {
             if *idx >= book.readings.len() {
-                return HttpResponse::NotFound().body(format!("book with ID {id} has no reading with index {idx}"));
+                return HttpResponse::NotFound()
+                    .body(format!("book with ID {id} has no reading with index {idx}"));
             }
             if pages == 0 {
                 book.readings[*idx].pages_read.remove(&date);
@@ -313,7 +343,8 @@ async fn book_reading_set_rating(
     match data_lock.books.get_mut(&id) {
         Some(book) => {
             if *idx >= book.readings.len() {
-                return HttpResponse::NotFound().body(format!("book with ID {id} has no reading with index {idx}"));
+                return HttpResponse::NotFound()
+                    .body(format!("book with ID {id} has no reading with index {idx}"));
             }
             book.readings[*idx].rating = Some(rating);
         }
@@ -335,7 +366,8 @@ async fn book_reading_delete_rating(
     match data_lock.books.get_mut(&id) {
         Some(book) => {
             if *idx >= book.readings.len() {
-                return HttpResponse::NotFound().body(format!("book with ID {id} has no reading with index {idx}"));
+                return HttpResponse::NotFound()
+                    .body(format!("book with ID {id} has no reading with index {idx}"));
             }
             book.readings[*idx].rating = None;
         }
