@@ -15,6 +15,7 @@
     import { allMovies, tags as allTags, fetchApi, PLATFORMS } from '../../stores'
     import PlatformChip from '../PlatformChip.svelte'
     import Chip from '../Chip.svelte'
+    import Tags from '../movie_card/Tags.svelte'
 
     export let open = false
     export let movieId: number
@@ -124,6 +125,7 @@
                             <PlatformChip platform={r.platform} />
                         {/if}
                         <span>at {r.speed.toFixed(2)}x</span>
+                        <Tags tags={r.tags} noNoTags />
                     </div>
                     <IconButton
                         class="material-icons"
@@ -131,8 +133,9 @@
                             origDate = r.date
                             date = r.date
                             rating = r.rating
-                            platform = r.platform || ''
                             speed = r.speed
+                            platform = r.platform || ''
+                            tags = r.tags
                             page = Page.Input
                         }}>edit</IconButton
                     >
@@ -146,6 +149,7 @@
                     rating = 6
                     platform = ''
                     speed = 1
+                    tags = []
                     page = Page.Input
                 }}
                 variant="outlined"

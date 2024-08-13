@@ -3,6 +3,7 @@
     import type { Rating } from '../../stores'
     import RatingDisplay from '../RatingDisplay.svelte'
     import PlatformChip from '../PlatformChip.svelte'
+    import Tags from './Tags.svelte'
 
     export let ratings: Rating[]
     export let expanded: boolean
@@ -23,6 +24,7 @@
             <PlatformChip platform={ratings[0].platform} />
         {/if}
         <span>at {ratings[0].speed.toFixed(2)}x</span>
+        <Tags tags={ratings[0].tags} noNoTags />
     {:else}
         no ratings
     {/if}

@@ -5,6 +5,7 @@
     const unknownTag: Tag = { id: 0, name: 'Unknown', color: [50, 50, 50], icon: 'question_mark' }
 
     export let tags: number[]
+    export let noNoTags = false
 </script>
 
 <span class="spaced-list">
@@ -17,7 +18,7 @@
             iconSize="1.3em"
         />
     {/each}
-    {#if tags.length === 0}
+    {#if tags.length === 0 && !noNoTags}
         no tags
     {/if}
 </span>
