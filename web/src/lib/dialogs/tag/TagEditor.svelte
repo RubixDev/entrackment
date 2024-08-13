@@ -30,12 +30,8 @@
         'collections',
     ]
 
-    // export let name: string
-    // export let color: Color
-    // export let icon: string | null
     export let tag: Tag
     export let deletable = false
-
 </script>
 
 <span class="spaced-list">
@@ -64,6 +60,7 @@
     <List>
         <Item>
             <Graphic>
+                <!-- TODO: radios are visually broken with `null` values -->
                 <Radio bind:group={tag.icon} value={null} />
             </Graphic>
             <ItemLabel>none</ItemLabel>

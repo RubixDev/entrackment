@@ -58,6 +58,8 @@ export interface MovieStub {
 export interface Rating {
     rating: number
     date: string
+    platform: string | null
+    speed: number
 }
 
 export interface Duration {

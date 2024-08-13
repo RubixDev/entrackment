@@ -3,12 +3,15 @@
     import Button, { Label, Icon } from '@smui/button'
     import Textfield from '@smui/textfield'
     import TextfieldIcon from '@smui/textfield/icon'
+    import List, { Item, Graphic, Label as ItemLabel } from '@smui/list'
+    import Radio from '@smui/radio'
 
     import LoadingPage from './LoadingPage.svelte'
     import ErrorPage from './ErrorPage.svelte'
     import type { Rating } from '../../stores'
     import RatingDisplay from '../RatingDisplay.svelte'
-    import { allMovies, fetchApi } from '../../stores'
+    import { allMovies, fetchApi, PLATFORMS } from '../../stores'
+    import PlatformChip from '../PlatformChip.svelte'
 
     export let open = false
     export let movieId: number
@@ -28,10 +31,17 @@
 
     let date = new Date().toISOString().substring(0, 10)
     let rating = 6
+    let platform: string = ''
+    let speed = 1
 
     async function submit() {
         page = Page.Loading
-        const newRating: Rating = { rating, date }
+        const newRating: Rating = {
+            rating,
+            date,
+            platform: platform === '' ? null : platform,
+            speed,
+        }
         const res = await fetchApi(
             fetch(`/api/movie/${movieId}/rating`, {
                 method: 'PUT',
@@ -81,22 +91,67 @@
 
                 {#each ratings as r (r.date)}
                     <span>{new Date(r.date).toLocaleDateString()}</span>
-                    <RatingDisplay interactive={false} height="1rem" value={r.rating} />
+                    <div class="spaced-list">
+                        <RatingDisplay interactive={false} height="1rem" value={r.rating} />
+                        {#if r.platform !== null}
+                            <span>on</span>
+                            <PlatformChip platform={r.platform} />
+                        {/if}
+                        <span>at {r.speed.toFixed(2)}x</span>
+                    </div>
                 {/each}
             </div>
-            <Button on:click={() => (page = Page.Input)} variant="outlined">
+            <Button
+                style="margin-top: 0.5rem;"
+                on:click={() => (page = Page.Input)}
+                variant="outlined"
+            >
                 <Icon class="material-icons">add</Icon>
                 <Label>add new</Label>
             </Button>
         {:else if page === Page.Input}
             <div class="grid">
                 <span>Date:</span>
-                <Textfield bind:value={date} label="Date" type="date">
+                <Textfield bind:value={date} label="Date" type="date" variant="filled">
                     <TextfieldIcon class="material-icons" slot="leadingIcon">event</TextfieldIcon>
                 </Textfield>
 
                 <span>Rating:</span>
                 <RatingDisplay bind:value={rating} />
+
+                <span>Platform:</span>
+                <List>
+                    <Item>
+                        <Graphic>
+                            <Radio bind:group={platform} value="" />
+                        </Graphic>
+                        <ItemLabel>other</ItemLabel>
+                    </Item>
+                    {#each PLATFORMS as p}
+                        <Item>
+                            <Graphic>
+                                <Radio bind:group={platform} value={p} />
+                            </Graphic>
+                            <ItemLabel><PlatformChip platform={p} /></ItemLabel>
+                        </Item>
+                    {/each}
+                </List>
+
+                <span>Speed:</span>
+                <Textfield
+                    bind:value={speed}
+                    label="Speed"
+                    type="number"
+                    input$min="0.25"
+                    input$max="5"
+                    input$step="0.25"
+                    variant="filled"
+                    on:blur={() => {
+                        if (isNaN(speed)) speed = 1
+                    }}
+                >
+                    <TextfieldIcon class="material-icons" slot="leadingIcon">speed</TextfieldIcon>
+                </Textfield>
             </div>
         {/if}
     </Content>
@@ -121,6 +176,7 @@
         display: grid;
         grid-template-columns: 1fr 2fr;
         gap: 0.5rem;
+        align-items: center;
     }
 
     .average {
