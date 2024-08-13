@@ -6,13 +6,15 @@
     import List, { Item, Graphic, Label as ItemLabel } from '@smui/list'
     import Radio from '@smui/radio'
     import IconButton from '@smui/icon-button'
+    import Checkbox from '@smui/checkbox'
 
     import LoadingPage from './LoadingPage.svelte'
     import ErrorPage from './ErrorPage.svelte'
-    import type { Movie, Rating } from '../../stores'
+    import type { Movie, Rating, Tag } from '../../stores'
     import RatingDisplay from '../RatingDisplay.svelte'
-    import { allMovies, fetchApi, PLATFORMS } from '../../stores'
+    import { allMovies, tags as allTags, fetchApi, PLATFORMS } from '../../stores'
     import PlatformChip from '../PlatformChip.svelte'
+    import Chip from '../Chip.svelte'
 
     export let open = false
     export let movieId: number
@@ -33,8 +35,9 @@
     let origDate: string | null = null
     let date = new Date().toISOString().substring(0, 10)
     let rating = 6
-    let platform: string = ''
     let speed = 1
+    let platform: string = ''
+    let tags: number[] = []
 
     async function submit() {
         page = Page.Loading
@@ -43,6 +46,7 @@
             date,
             platform: platform === '' ? null : platform,
             speed,
+            tags,
         }
         const res = await fetchApi(
             fetch(`/api/movie/${movieId}/rating?date=${origDate}`, {
@@ -165,6 +169,22 @@
                 <span>Rating:</span>
                 <RatingDisplay bind:value={rating} />
 
+                <span>Speed:</span>
+                <Textfield
+                    bind:value={speed}
+                    label="Speed"
+                    type="number"
+                    input$min="0.25"
+                    input$max="5"
+                    input$step="0.25"
+                    variant="filled"
+                    on:blur={() => {
+                        if (isNaN(speed)) speed = 1
+                    }}
+                >
+                    <TextfieldIcon class="material-icons" slot="leadingIcon">speed</TextfieldIcon>
+                </Textfield>
+
                 <span>Platform:</span>
                 <List>
                     <Item>
@@ -183,21 +203,28 @@
                     {/each}
                 </List>
 
-                <span>Speed:</span>
-                <Textfield
-                    bind:value={speed}
-                    label="Speed"
-                    type="number"
-                    input$min="0.25"
-                    input$max="5"
-                    input$step="0.25"
-                    variant="filled"
-                    on:blur={() => {
-                        if (isNaN(speed)) speed = 1
-                    }}
-                >
-                    <TextfieldIcon class="material-icons" slot="leadingIcon">speed</TextfieldIcon>
-                </Textfield>
+                <span>
+                    <span>Tags:</span>
+                    <div class="note">You can add/edit/delete tags when editing movies.</div>
+                </span>
+                <List checkList>
+                    {#each [...Object.values($allTags)].sort( (a, b) => a.name.localeCompare(b.name), ) as tag (tag.id)}
+                        <Item>
+                            <Graphic>
+                                <Checkbox bind:group={tags} value={tag.id} />
+                            </Graphic>
+                            <ItemLabel>
+                                <Chip
+                                    label={tag.name}
+                                    color={tag.color}
+                                    iconLeft="label_outline"
+                                    iconRight={tag.icon}
+                                    iconSize="1.3em"
+                                />
+                            </ItemLabel>
+                        </Item>
+                    {/each}
+                </List>
             </div>
         {/if}
     </Content>
@@ -222,10 +249,17 @@
         display: grid;
         grid-template-columns: 1fr 2fr;
         gap: 0.5rem;
-        align-items: center;
 
         &.list {
             grid-template-columns: 1fr 2fr 0fr;
+            align-items: center;
+        }
+
+        .note {
+            font-size: 0.8em;
+            color: var(--clr-text-disabled);
+            margin-top: 0.5rem;
+            line-height: normal;
         }
     }
 

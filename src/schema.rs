@@ -64,13 +64,18 @@ const fn default_watch_speed() -> f32 {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Rating {
+    pub date: NaiveDate,
+
     /// Integer rating in range `1..=10`
     pub rating: u8,
-    pub date: NaiveDate,
-    pub platform: Option<Platform>,
+
     /// The watch speed, usually in range `1.0..=5.0`
     #[serde(default = "default_watch_speed")]
     pub speed: f32,
+
+    pub platform: Option<Platform>,
+    #[serde(default)]
+    pub tags: BTreeSet<u32>,
 }
 
 #[derive(
