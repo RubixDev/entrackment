@@ -30,7 +30,10 @@ export const PLATFORMS = [
     'Stan',
 ]
 
-export async function fetchApi<T>(request: Promise<Response>, hasBody: boolean = true): Promise<string | T> {
+export async function fetchApi<T>(
+    request: Promise<Response>,
+    hasBody: boolean = true,
+): Promise<string | T> {
     const response = await request
     if (response.status < 200 || response.status >= 300) {
         const errorText = await response.text()
