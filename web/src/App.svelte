@@ -1,5 +1,6 @@
 <script lang="ts">
     import Fab, { Icon } from '@smui/fab'
+    import Button, { Label } from '@smui/button'
 
     import {
         SchemeKind,
@@ -43,6 +44,13 @@
         })
 
     let addMovieDialogOpen = false
+
+    let renderedMovies: Movie[] = []
+    $: $filteredMovies, renderMovies()
+
+    function renderMovies() {
+        renderedMovies = $filteredMovies.splice(0, 5)
+    }
 </script>
 
 <svelte:head>
@@ -53,9 +61,19 @@
 <NavBar />
 <main>
     <Filter />
-    {#each $filteredMovies as movie (movie.tmdb_id)}
+    {#each renderedMovies as movie (movie.tmdb_id)}
         <MovieCard {movie} />
     {/each}
+    {#if $filteredMovies.length > 0}
+        <div class="bottom-buttons">
+            <Button variant="outlined" on:click={() => (renderedMovies = [...renderedMovies, ...$filteredMovies.splice(0, 20)])}>
+                <Label>load more</Label>
+            </Button>
+            <Button variant="outlined" on:click={() => (renderedMovies = [...renderedMovies, ...$filteredMovies.splice(0, $filteredMovies.length)])}>
+                <Label>load rest</Label>
+            </Button>
+        </div>
+    {/if}
 </main>
 <Fab color="primary" on:click={() => (addMovieDialogOpen = true)} id="add-movie-fab">
     <Icon class="material-icons">add</Icon>
@@ -70,6 +88,13 @@
         margin: auto;
         padding: 5rem 1rem;
         max-width: 60rem;
+    }
+
+    .bottom-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem 2rem;
+        flex-wrap: wrap;
     }
 
     :global(#add-movie-fab) {
