@@ -10,7 +10,7 @@
 
     import LoadingPage from './LoadingPage.svelte'
     import ErrorPage from './ErrorPage.svelte'
-    import type { Movie, Rating, Tag } from '../../stores'
+    import { type Movie, type Rating, averageOf } from '../../stores'
     import RatingDisplay from '../RatingDisplay.svelte'
     import { allMovies, tags as allTags, fetchApi, PLATFORMS } from '../../stores'
     import PlatformChip from '../PlatformChip.svelte'
@@ -21,7 +21,7 @@
     export let movieId: number
     export let ratings: Rating[]
 
-    let average = ratings.map(r => r.rating).reduce((acc, r) => acc + r, 0) / ratings.length
+    let average = averageOf(ratings.map(r => r.rating))
 
     enum Page {
         Loading,

@@ -42,6 +42,11 @@ export async function fetchApi<T>(
     return hasBody ? await response.json() : {}
 }
 
+export function averageOf(list: number[]): number {
+    if (list.length === 0) return 0
+    return list.reduce((acc, e) => acc + e, 0) / list.length
+}
+
 export interface Tag {
     id: number
     name: string

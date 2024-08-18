@@ -49,7 +49,7 @@
     $: $filteredMovies, renderMovies()
 
     function renderMovies() {
-        renderedMovies = $filteredMovies.splice(0, 5)
+        renderedMovies = $filteredMovies.slice(0, 5)
     }
 </script>
 
@@ -64,12 +64,12 @@
     {#each renderedMovies as movie (movie.tmdb_id)}
         <MovieCard {movie} />
     {/each}
-    {#if $filteredMovies.length > 0}
+    {#if renderedMovies.length < $filteredMovies.length}
         <div class="bottom-buttons">
-            <Button variant="outlined" on:click={() => (renderedMovies = [...renderedMovies, ...$filteredMovies.splice(0, 20)])}>
+            <Button variant="outlined" on:click={() => (renderedMovies = [...renderedMovies, ...$filteredMovies.slice(renderedMovies.length, renderedMovies.length + 20)])}>
                 <Label>load more</Label>
             </Button>
-            <Button variant="outlined" on:click={() => (renderedMovies = [...renderedMovies, ...$filteredMovies.splice(0, $filteredMovies.length)])}>
+            <Button variant="outlined" on:click={() => (renderedMovies = [...renderedMovies, ...$filteredMovies.slice(renderedMovies.length, $filteredMovies.length)])}>
                 <Label>load rest</Label>
             </Button>
         </div>
