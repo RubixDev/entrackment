@@ -28,6 +28,7 @@
         'draw',
         'music_note',
         'collections',
+        'translate'
     ]
 
     export let tag: Tag

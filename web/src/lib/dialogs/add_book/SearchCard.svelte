@@ -1,8 +1,14 @@
 <script lang="ts">
-    import type { MovieStub } from '../../../stores'
+    import type { BookEdition, BookStub } from '../../../stores'
 
-    // either icon name or movie data
-    export let data: string | MovieStub
+    // either icon name or book data
+    export let data: string | BookStub | BookEdition
+    export let isEdition = false
+
+    let stub: BookStub
+    $: stub = data as BookStub
+    let edition: BookEdition
+    $: edition = data as BookEdition
 </script>
 
 <button class="card mdc-elevation--z2" class:clickable={typeof data !== 'string'} on:click>
@@ -12,18 +18,31 @@
         </div>
         <div class="content"><slot /></div>
     {:else}
-        {#if data.poster !== null}
-            <img src="/api/posters/small{data.poster}" alt="poster" class="img" />
-        {:else}
-            <div class="img fallback-poster">
-                <i class="material-icons">image_not_supported</i>
-            </div>
-        {/if}
+        <!-- {#if data.poster !== null} -->
+        <img
+            src="https://covers.openlibrary.org/b/olid/{isEdition ? edition.key.id : stub.cover_edition_key}-S.jpg"
+            alt="poster"
+            class="img"
+        />
+        <!-- {:else} -->
+        <!--     <div class="img fallback-poster"> -->
+        <!--         <i class="material-icons">image_not_supported</i> -->
+        <!--     </div> -->
+        <!-- {/if} -->
         <div style="overflow: hidden;">
-            <div class="title">
-                <b>{data.title} ({new Date(data.release_date).getFullYear()})</b>
-            </div>
-            <div class="description">{data.description}</div>
+            {#if isEdition}
+                <div class="title">
+                    <b>{edition.title} ({edition.publish_date})</b>
+                </div>
+                <div class="desc">ISBN: {edition.isbn_13.length > 0 ? edition.isbn_13[0] : edition.isbn_10[0]}</div>
+                <div class="desc">{edition.description || 'no description'}</div>
+            {:else}
+                <div class="title">
+                    <b>{stub.title} ({stub.first_publish_year})</b>
+                </div>
+                <div class="desc">{stub.author_name.join(', ')}</div>
+                <div class="desc">{stub.edition_count} Editions</div>
+            {/if}
         </div>
     {/if}
 </button>
@@ -83,12 +102,12 @@
         gap: 1rem;
     }
 
-    .fallback-poster {
-        background-color: var(--clr-bg-img);
-        display: grid;
-        align-items: center;
-        justify-content: center;
-    }
+    /* .fallback-poster { */
+    /*     background-color: var(--clr-bg-img); */
+    /*     display: grid; */
+    /*     align-items: center; */
+    /*     justify-content: center; */
+    /* } */
 
     i {
         font-size: 2.5rem;
@@ -104,11 +123,11 @@
         line-clamp: 1;
     }
 
-    .description {
+    .desc {
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
-        line-clamp: 2;
+        line-clamp: 1;
     }
 </style>

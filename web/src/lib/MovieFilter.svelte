@@ -9,9 +9,7 @@
 
     import {
         filteredMovies,
-        filteredBooks,
         allMovies,
-        allBooks,
         fetching,
         averageOf,
     } from '../stores'
@@ -29,8 +27,6 @@
         filter(),
         sort()
     $: sortBy, sortDirection, sort()
-
-    $: $filteredBooks = $allBooks.filter(m => m.title.toLowerCase().includes(search.toLowerCase()))
 
     let search = ''
     let showSeen = false

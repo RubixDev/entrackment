@@ -34,16 +34,14 @@ pub struct WorksEditionsLinks {
 pub struct Edition {
     pub key: Key,
     #[serde(default)]
-    #[serde_as(as = "Vec<serde_with::DisplayFromStr>")]
-    pub isbn_13: Vec<u64>,
+    pub isbn_13: Vec<String>,
     #[serde(default)]
-    #[serde_as(as = "Vec<serde_with::DisplayFromStr>")]
-    pub isbn_10: Vec<u64>,
+    pub isbn_10: Vec<String>,
     pub title: String,
-    #[serde_as(as = "Option<serde_with::FromInto<Description>>")]
+    #[serde_as(deserialize_as = "Option<serde_with::FromInto<Description>>")]
     pub description: Option<String>,
     #[serde(default)]
-    #[serde_as(as = "Vec<serde_with::FromInto<KeyedKey>>")]
+    #[serde_as(deserialize_as = "Vec<serde_with::FromInto<KeyedKey>>")]
     pub authors: Vec<Key>,
     pub publish_date: String,
 }

@@ -53,7 +53,7 @@ pub enum OlIdKind {
 }
 
 #[derive(
-    Debug, Clone, PartialEq, Eq, Hash, serde_with::SerializeDisplay, serde_with::DeserializeFromStr,
+    Debug, Clone, PartialEq, Eq, Hash, Serialize, serde_with::DeserializeFromStr,
 )]
 pub struct Key {
     pub path: String,

@@ -121,7 +121,7 @@ pub enum Platform {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Book {
     pub olid: OlId,
-    pub isbn: u64,
+    pub isbn: String,
     pub title: String,
     pub description: String,
     pub authors: Vec<String>,

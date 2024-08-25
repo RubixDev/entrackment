@@ -2,62 +2,55 @@
     import CircularProgress from '@smui/circular-progress'
     import Button, { Icon, Label } from '@smui/button'
 
+    import type { Book } from '../stores'
     import Tags from './movie_card/Tags.svelte'
-    import Platforms from './movie_card/Platforms.svelte'
-    import ReleaseDate from './movie_card/ReleaseDate.svelte'
-    import Runtime from './movie_card/Runtime.svelte'
-    import type { Movie } from '../stores'
-    import RatingComponent from './movie_card/Rating.svelte'
     import BottomButtons from './movie_card/BottomButtons.svelte'
-    import EditMovieDialog from './dialogs/EditMovieDialog.svelte'
-    import RatingsInfoDialog from './dialogs/RatingsInfoDialog.svelte'
+    import EditBookDialog from './dialogs/EditBookDialog.svelte'
 
-    export let movie: Movie
+    export let book: Book
 
     let expanded = false
-    let ratingsDialogOpen = false
     let editDialogOpen = false
 </script>
 
-<RatingsInfoDialog bind:open={ratingsDialogOpen} movieId={movie.tmdb_id} ratings={movie.ratings} />
-<EditMovieDialog bind:open={editDialogOpen} movie={structuredClone(movie)} />
+<EditBookDialog bind:open={editDialogOpen} book={structuredClone(book)} />
 <div
     class="card mdc-elevation--z4"
     class:expanded
-    class:bg-poster={movie.poster !== null}
-    style:--poster-url="url('/api/posters/big{movie.poster}')"
+    class:bg-poster={true}
+    style:--poster-url="url('https://covers.openlibrary.org/b/olid/{book.olid}-M.jpg')"
 >
     <div class="top-grid">
-        {#if movie.poster !== null}
-            <img
-                src="/api/posters/big{movie.poster}"
-                class="img"
-                class:expanded
-                loading="lazy"
-                alt="poster"
-            />
-        {:else}
-            <div class="img" class:expanded>
-                <i class="material-icons">image_not_supported</i>
-            </div>
-        {/if}
+        <!-- {#if movie.poster !== null} -->
+        <img
+            src="https://covers.openlibrary.org/b/olid/{book.olid}-M.jpg"
+            class="img"
+            class:expanded
+            loading="lazy"
+            alt="poster"
+        />
+        <!-- {:else} -->
+        <!--     <div class="img" class:expanded> -->
+        <!--         <i class="material-icons">image_not_supported</i> -->
+        <!--     </div> -->
+        <!-- {/if} -->
         {#if expanded}
             <div>
-                <h3>{movie.title}</h3>
-                <p>{movie.description}</p>
+                <h3>{book.title}</h3>
+                <p>{book.description}</p>
             </div>
         {:else}
             <div class="small-grid">
-                <h3>{movie.title}</h3>
-                <div class="hint"><Tags tags={movie.tags} /></div>
-                <div class="hint"><Platforms platforms={movie.platforms} /></div>
+                <h3>{book.title}</h3>
+                <div class="hint"><Tags tags={book.tags} /></div>
                 <div class="hint" style="display: flex; gap: 1.5rem;">
-                    <ReleaseDate release_date={movie.release_date} />
-                    <Runtime runtime={movie.runtime} />
+                    <div class="hint">{book.release_date}</div>
+                    <div class="hint">{book.end_page - book.start_page + 1} pages</div>
                 </div>
                 <div class="hint">
-                    <RatingComponent ratings={movie.ratings} {expanded} bind:ratingsDialogOpen />
+                    {book.authors.length > 0 ? book.authors.join(', ') : 'unknown author'}
                 </div>
+                <div class="hint">{book.isbn}</div>
                 <BottomButtons bind:expanded bind:editDialogOpen />
             </div>
         {/if}
@@ -65,39 +58,38 @@
     {#if expanded}
         <div class="bottom-grid">
             <span class="hint">Tags:</span>
-            <Tags tags={movie.tags} />
+            <Tags tags={book.tags} />
 
-            <span class="hint">Platforms:</span>
-            <Platforms platforms={movie.platforms} />
+            <span class="hint">Author{book.authors.length === 1 ? '' : 's'}:</span>
+            <span class="hint">{book.authors.length > 0 ? book.authors.join(', ') : 'unknown'}</span
+            >
 
             <span class="hint">Release Date:</span>
-            <ReleaseDate release_date={movie.release_date} />
+            <span class="hint">{book.release_date}</span>
 
-            <span class="hint">Runtime:</span>
-            <Runtime runtime={movie.runtime} />
+            <span class="hint">Pages:</span>
+            <span class="hint">{book.end_page - book.start_page + 1} ({book.start_page}&nbsp;-&nbsp;{book.end_page})</span>
 
-            <span class="hint">Personal Rating:</span>
-            <RatingComponent ratings={movie.ratings} {expanded} bind:ratingsDialogOpen />
+            <span class="hint">ISBN:</span>
+            <span class="hint">{book.isbn}</span>
 
-            <span class="hint">TMDB Score:</span>
+            <span class="hint">Community Score:</span>
             <span class="spaced-list">
-                <CircularProgress progress={movie.score / 10} style="height: 32px; width: 32px;" />
-                {(movie.score * 10).toFixed(2)}%
+                {#if book.score === null}
+                    none
+                {:else}
+                    <CircularProgress
+                        progress={book.score / 10}
+                        style="height: 32px; width: 32px;"
+                    />
+                    {(book.score * 10).toFixed(2)}%
+                {/if}
             </span>
 
             <span class="hint">Links:</span>
             <span class="spaced-list">
-                {#if movie.imdb_id !== null}
-                    <Button
-                        target="_blank"
-                        href="https://www.imdb.com/title/tt{movie.imdb_id.toString().padStart(7, '0')}/"
-                    >
-                        <Label>IMDb</Label>
-                        <Icon class="material-icons">open_in_new</Icon>
-                    </Button>
-                {/if}
-                <Button target="_blank" href="https://www.themoviedb.org/movie/{movie.tmdb_id}">
-                    <Label>TMDB</Label>
+                <Button target="_blank" href="https://openlibrary.org/olid/{book.olid}">
+                    <Label>OpenLibrary</Label>
                     <Icon class="material-icons">open_in_new</Icon>
                 </Button>
             </span>

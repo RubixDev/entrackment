@@ -91,7 +91,7 @@ export interface Duration {
 
 export interface Book {
     olid: string
-    isbn: number
+    isbn: string
     title: string
     description: string
     authors: string[]
@@ -104,6 +104,31 @@ export interface Book {
 }
 
 export interface Reading {
-    pages_read: Map<Date, number>
+    pages_read: { [key: string]: number }
     rating: Rating | null
+}
+
+export interface BookStub {
+    key: Key
+    cover_edition_key: string | null
+    edition_count: number
+    title: string
+    author_name: string[]
+    first_publish_year: number | null
+    ratings_average: number | null
+}
+
+export interface Key {
+    path: string
+    id: string
+}
+
+export interface BookEdition {
+    key: Key
+    isbn_13: string[]
+    isbn_10: string[]
+    title: string
+    description: string | null
+    authors: Key[]
+    publish_date: string
 }
