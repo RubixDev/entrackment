@@ -21,7 +21,8 @@
     export let movieId: number
     export let ratings: Rating[]
 
-    let average = averageOf(ratings.map(r => r.rating))
+    let average = 0
+    $: average = averageOf(ratings.map(r => r.rating))
 
     enum Page {
         Loading,
