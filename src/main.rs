@@ -51,6 +51,7 @@ async fn main() -> Result<()> {
             .service(getters::get_all_books)
             .service(getters::get_movie)
             .service(getters::get_book)
+            .service(setters::clear_cache)
             .service(setters::post_movie)
             .service(setters::patch_movie)
             .service(setters::delete_movie)

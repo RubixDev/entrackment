@@ -16,6 +16,16 @@ use crate::{
     AppState,
 };
 
+#[delete("/api/cache")]
+async fn clear_cache(data: Data<AppState>) -> impl Responder {
+    let mut data_lock = data.0.lock().await;
+    data_lock.tmdb_cache.clear();
+    match crate::save_to_disk(&data_lock).await {
+        Ok(()) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().body("Failed to save new data to disk"),
+    }
+}
+
 #[post("/api/movie")]
 async fn post_movie(data: Data<AppState>, Json(movie): Json<Movie>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
