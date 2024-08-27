@@ -17,6 +17,7 @@ mod tmdb;
 
 pub const DATA_FILE: &str = "data.json";
 pub const POSTERS_DIR: &str = "posters";
+pub const COVERS_DIR: &str = "covers";
 
 pub static CLIENT: Lazy<Client> = Lazy::new(Client::new);
 pub static TMDB: Lazy<tmdb_api::client::ReqwestClient> = Lazy::new(|| {
@@ -42,6 +43,8 @@ async fn main() -> Result<()> {
     let data = serde_json::from_str(&saved_data)?;
     fs::create_dir_all(Path::new(POSTERS_DIR).join("small")).await?;
     fs::create_dir_all(Path::new(POSTERS_DIR).join("big")).await?;
+    fs::create_dir_all(Path::new(COVERS_DIR).join("small")).await?;
+    fs::create_dir_all(Path::new(COVERS_DIR).join("big")).await?;
 
     let state = Data::new(AppState(Mutex::new(data)));
     HttpServer::new(move || {
@@ -71,6 +74,8 @@ async fn main() -> Result<()> {
             .service(setters::book_reading_delete_rating)
             .service(posters::get_poster_small)
             .service(posters::get_poster_big)
+            .service(posters::get_cover_small)
+            .service(posters::get_cover_big)
             .service(tmdb::search)
             .service(tmdb::by_id)
             .service(openlib::search)

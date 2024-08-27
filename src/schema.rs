@@ -19,9 +19,9 @@ pub struct AppData {
     /// map of TMDB or IMDb id to raw movies
     #[serde(default)]
     pub tmdb_cache: HashMap<String, Movie>,
-    /// map of Open Library id to Book structs
+    /// map of book id to Book structs
     #[serde(default)]
-    pub books: HashMap<OlId, Book>,
+    pub books: HashMap<u64, Book>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -120,16 +120,15 @@ pub enum Platform {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Book {
-    pub olid: OlId,
-    pub isbn: String,
+    pub id: u64,
+    /// Optional Open Library Work ID
+    pub olid: Option<OlId>,
     pub title: String,
     pub description: String,
     pub authors: Vec<String>,
     pub readings: Vec<Reading>,
     pub tags: BTreeSet<u32>,
-    pub release_date: String,
-    pub start_page: u16,
-    pub end_page: u16,
+    pub release_date: Option<NaiveDate>,
     pub score: Option<f64>,
 }
 
@@ -137,4 +136,7 @@ pub struct Book {
 pub struct Reading {
     pub pages_read: BTreeMap<NaiveDate, u16>,
     pub rating: Option<Rating>,
+    pub isbn: Option<String>,
+    pub start_page: u16,
+    pub end_page: u16,
 }

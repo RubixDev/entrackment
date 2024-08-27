@@ -1,6 +1,6 @@
 use std::{
     cmp,
-    collections::{btree_map::Entry, hash_map, BTreeMap},
+    collections::{btree_map::Entry, hash_map},
 };
 
 use actix_web::{
@@ -9,7 +9,6 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use chrono::NaiveDate;
-use openlibrsry::OlId;
 
 use crate::{
     schema::{Book, Movie, Rating, Reading, Tag},
@@ -229,16 +228,17 @@ async fn movie_delete_rating(
 #[post("/api/book")]
 async fn post_book(data: Data<AppState>, Json(book): Json<Book>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
-    match data_lock.books.entry(book.olid) {
-        hash_map::Entry::Vacant(entry) => {
-            entry.insert(book);
+    let id = loop {
+        let new_id = rand::random::<u64>();
+        if !data_lock.books.contains_key(&new_id) {
+            break new_id;
         }
-        hash_map::Entry::Occupied(_) => {
-            return HttpResponse::Conflict().body("a book with that ID is already present")
-        }
-    }
+    };
+    let new_book = Book { id, ..book };
+    let resp = HttpResponse::Ok().json(&new_book);
+    data_lock.books.insert(id, new_book);
     match crate::save_to_disk(&data_lock).await {
-        Ok(()) => HttpResponse::Ok().finish(),
+        Ok(()) => resp,
         Err(_) => HttpResponse::InternalServerError().body("Failed to save new data to disk"),
     }
 }
@@ -246,10 +246,10 @@ async fn post_book(data: Data<AppState>, Json(book): Json<Book>) -> impl Respond
 #[patch("/api/book")]
 async fn patch_book(data: Data<AppState>, Json(book): Json<Book>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
-    match data_lock.books.entry(book.olid) {
+    match data_lock.books.entry(book.id) {
         hash_map::Entry::Vacant(_) => {
             return HttpResponse::NotFound()
-                .body(format!("book with ID {} does not exist", book.olid))
+                .body(format!("book with ID {} does not exist", book.id))
         }
         hash_map::Entry::Occupied(mut entry) => {
             *entry.get_mut() = book;
@@ -262,7 +262,7 @@ async fn patch_book(data: Data<AppState>, Json(book): Json<Book>) -> impl Respon
 }
 
 #[delete("/api/book/{id}")]
-async fn delete_book(data: Data<AppState>, id: Path<OlId>) -> impl Responder {
+async fn delete_book(data: Data<AppState>, id: Path<u64>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     if data_lock.books.remove(&id).is_none() {
         return HttpResponse::NotFound().body(format!("book with ID {id} does not exist"));
@@ -274,13 +274,14 @@ async fn delete_book(data: Data<AppState>, id: Path<OlId>) -> impl Responder {
 }
 
 #[put("/api/book/{id}/reading")]
-async fn book_add_reading(data: Data<AppState>, id: Path<OlId>) -> impl Responder {
+async fn book_add_reading(
+    data: Data<AppState>,
+    id: Path<u64>,
+    Json(reading): Json<Reading>,
+) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     match data_lock.books.get_mut(&id) {
-        Some(book) => book.readings.push(Reading {
-            pages_read: BTreeMap::new(),
-            rating: None,
-        }),
+        Some(book) => book.readings.push(reading),
         None => return HttpResponse::NotFound().body(format!("book with ID {id} does not exist")),
     }
     match crate::save_to_disk(&data_lock).await {
@@ -292,7 +293,7 @@ async fn book_add_reading(data: Data<AppState>, id: Path<OlId>) -> impl Responde
 #[delete("/api/book/{id}/reading/{idx}")]
 async fn book_delete_reading(
     data: Data<AppState>,
-    id: Path<OlId>,
+    id: Path<u64>,
     idx: Path<usize>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;
@@ -312,14 +313,18 @@ async fn book_delete_reading(
     }
 }
 
+#[derive(serde::Deserialize)]
+struct SetRatingQuery {
+    date: NaiveDate,
+    pages: u16,
+}
+
 #[patch("/api/book/{id}/reading/{idx}")]
 async fn book_reading_set_for_date(
     data: Data<AppState>,
-    id: Path<OlId>,
+    id: Path<u64>,
     idx: Path<usize>,
-    // TODO: this query usage is wrong
-    Query(date): Query<NaiveDate>,
-    Query(pages): Query<u16>,
+    Query(SetRatingQuery { date, pages }): Query<SetRatingQuery>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     match data_lock.books.get_mut(&id) {
@@ -345,7 +350,7 @@ async fn book_reading_set_for_date(
 #[put("/api/book/{id}/reading/{idx}/rating")]
 async fn book_reading_set_rating(
     data: Data<AppState>,
-    id: Path<OlId>,
+    id: Path<u64>,
     idx: Path<usize>,
     Json(rating): Json<Rating>,
 ) -> impl Responder {
@@ -369,7 +374,7 @@ async fn book_reading_set_rating(
 #[delete("/api/book/{id}/reading/{idx}/rating")]
 async fn book_reading_delete_rating(
     data: Data<AppState>,
-    id: Path<OlId>,
+    id: Path<u64>,
     idx: Path<usize>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;

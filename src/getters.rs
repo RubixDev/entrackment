@@ -3,7 +3,6 @@ use actix_web::{
     web::{Data, Path},
     HttpResponse, Responder,
 };
-use openlibrsry::OlId;
 
 use crate::AppState;
 
@@ -31,7 +30,7 @@ async fn get_movie(data: Data<AppState>, id: Path<u64>) -> impl Responder {
 }
 
 #[get("/api/book/{id}")]
-async fn get_book(data: Data<AppState>, id: Path<OlId>) -> impl Responder {
+async fn get_book(data: Data<AppState>, id: Path<u64>) -> impl Responder {
     match data.0.lock().await.books.get(&id) {
         Some(book) => HttpResponse::Ok().json(book),
         None => HttpResponse::NotFound().finish(),
