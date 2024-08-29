@@ -93,7 +93,7 @@ async fn get_cover(
     olid: Option<OlId>,
 ) -> impl Responder {
     let id = id.into_inner();
-    get_image(COVERS_DIR, "cover", &id.to_string(), dir, || {
+    get_image(COVERS_DIR, "cover", &format!("{id}.jpg"), dir, || {
         olid.map(|olid| {
             format!("https://covers.openlibrary.org/b/olid/{olid}-{size}.jpg?default=false")
         })

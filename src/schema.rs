@@ -21,7 +21,7 @@ pub struct AppData {
     pub tmdb_cache: HashMap<String, Movie>,
     /// map of book id to Book structs
     #[serde(default)]
-    pub books: HashMap<u64, Book>,
+    pub books: HashMap<u32, Book>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -120,7 +120,7 @@ pub enum Platform {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Book {
-    pub id: u64,
+    pub id: u32,
     /// Optional Open Library Work ID
     pub olid: Option<OlId>,
     pub title: String,

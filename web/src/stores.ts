@@ -90,22 +90,23 @@ export interface Duration {
 }
 
 export interface Book {
-    olid: string
-    isbn: string
-    title: string
-    description: string
-    authors: string[]
-    readings: Reading[]
-    tags: number[]
-    release_date: string
-    start_page: number
-    end_page: number
-    score: number | null
+    id: number,
+    olid: string | null,
+    title: string,
+    description: string,
+    authors: string[],
+    readings: Reading[],
+    tags: number[],
+    release_date: string,
+    score: number | null,
 }
 
 export interface Reading {
     pages_read: { [key: string]: number }
     rating: Rating | null
+    isbn: string | null,
+    start_page: number,
+    end_page: number,
 }
 
 export interface BookStub {

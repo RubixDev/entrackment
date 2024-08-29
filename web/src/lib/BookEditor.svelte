@@ -23,10 +23,12 @@
 </script>
 
 <div class="top-buttons">
-    <Button variant="outlined" target="_blank" href="https://openlibrary.org/olid/{book.olid}">
-        <Label>OpenLibrary page</Label>
-        <Icon class="material-icons">open_in_new</Icon>
-    </Button>
+    {#if book.olid !== null}
+        <Button variant="outlined" target="_blank" href="https://openlibrary.org/olid/{book.olid}">
+            <Label>OpenLibrary page</Label>
+            <Icon class="material-icons">open_in_new</Icon>
+        </Button>
+    {/if}
     {#if deletable}
         <Button on:click={() => dispatch('delete')} class="red-button">
             <Label>delete</Label>
@@ -36,12 +38,11 @@
 </div>
 <div class="grid">
     <span>OLID:</span>
+    <!-- TODO: customizable OLID? -->
     <span>{book.olid}</span>
 
-    <span>ISBN:</span>
-    <span>{book.isbn}</span>
-
     <span>Community Score:</span>
+    <!-- TODO: customizable score -->
     <span class="score">
         {#if book.score === null}
             none
@@ -67,29 +68,9 @@
     <span>{book.authors.length > 0 ? book.authors.join(', ') : 'unknown'}</span>
 
     <span>Release date:</span>
-    <Textfield bind:value={book.release_date} label="Release date" variant="outlined">
+    <Textfield bind:value={book.release_date} label="Release date" variant="outlined" type="date">
         <TextfieldIcon class="material-icons" slot="leadingIcon">event</TextfieldIcon>
     </Textfield>
-
-    <span>Start page:</span>
-    <Textfield
-        bind:value={book.start_page}
-        label="Start page"
-        variant="outlined"
-        type="number"
-        input$min="0"
-        input$step="1"
-    />
-
-    <span>End page:</span>
-    <Textfield
-        bind:value={book.end_page}
-        label="End page"
-        variant="outlined"
-        type="number"
-        input$min="0"
-        input$step="1"
-    />
 
     <span>Tags:</span>
     <span>
@@ -134,12 +115,15 @@
         </Button>
     </span>
 
+    <!-- TODO: custom cover upload -->
     <span>Cover Image:</span>
     <div>
         <!-- {#if poster !== null} -->
         <img
-            src="https://covers.openlibrary.org/b/olid/{book.olid}-M.jpg"
-            alt="poster"
+            src={deletable
+                ? `/api/covers/big/${book.id}${book.olid === null ? '' : `?olid=${book.olid}`}`
+                : `https://covers.openlibrary.org/b/olid/${book.olid}-M.jpg`}
+            alt=""
             class="img"
             loading="lazy"
         />

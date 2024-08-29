@@ -4,6 +4,7 @@
     // either icon name or book data
     export let data: string | BookStub | BookEdition
     export let isEdition = false
+    export let clickable = false
 
     let stub: BookStub
     $: stub = data as BookStub
@@ -11,7 +12,11 @@
     $: edition = data as BookEdition
 </script>
 
-<button class="card mdc-elevation--z2" class:clickable={typeof data !== 'string'} on:click>
+<button
+    class="card mdc-elevation--z2"
+    class:clickable={typeof data !== 'string' || clickable}
+    on:click
+>
     {#if typeof data === 'string'}
         <div class="img icon-poster">
             <i class="material-icons">{data}</i>
@@ -20,8 +25,10 @@
     {:else}
         <!-- {#if data.poster !== null} -->
         <img
-            src="https://covers.openlibrary.org/b/olid/{isEdition ? edition.key.id : stub.cover_edition_key}-S.jpg"
-            alt="poster"
+            src="https://covers.openlibrary.org/b/olid/{isEdition
+                ? edition.key.id
+                : stub.cover_edition_key}-S.jpg"
+            alt=""
             class="img"
         />
         <!-- {:else} -->
@@ -34,7 +41,7 @@
                 <div class="title">
                     <b>{edition.title} ({edition.publish_date})</b>
                 </div>
-                <div class="desc">ISBN: {edition.isbn_13.length > 0 ? edition.isbn_13[0] : edition.isbn_10[0]}</div>
+                <div class="desc">ISBN: {[...edition.isbn_13, ...edition.isbn_10].join(', ')}</div>
                 <div class="desc">{edition.description || 'no description'}</div>
             {:else}
                 <div class="title">

@@ -42,16 +42,14 @@
     let editions: BookEdition[] = []
 
     let book: Book = {
-        olid: '',
-        isbn: 0,
+        id: 0,
+        olid: null,
         title: '',
         description: '',
         authors: [],
         readings: [],
         tags: [],
-        release_date: '',
-        start_page: 0,
-        end_page: 0,
+        release_date: '0000-00-00',
         score: null,
     }
 
@@ -77,28 +75,28 @@
         page = Page.SelectEdition
     }
 
-    async function openInputPage(edition: BookEdition) {
-        console.log('aaaaaaaaa', edition)
+    async function openInputPage(edition?: BookEdition) {
+        const work = selectedWork === -1 ? null : searchResults[selectedWork]
         book = {
-            olid: edition.key.id,
-            isbn: edition.isbn_13.length > 0 ? edition.isbn_13[0] : edition.isbn_10[0],
-            title: edition.title,
-            description: edition.description || '',
-            // TODO: only use authors for this edition
-            authors: searchResults[selectedWork].author_name,
+            id: 0,
+            olid: edition?.key?.id || work?.key?.id || null,
+            title: edition?.title || work?.title || '',
+            description: edition?.description || '',
+            authors: work?.author_name || [],
             readings: [],
             tags: [],
-            release_date: edition.publish_date,
-            start_page: 0,
-            end_page: 0,
-            score: searchResults[selectedWork].ratings_average,
+            release_date:
+                typeof work?.first_publish_year !== 'number'
+                    ? '0000-00-00'
+                    : `${work.first_publish_year}-01-01`,
+            score: work?.ratings_average || null,
         }
         page = Page.Input
     }
 
     async function submit() {
         page = Page.Loading
-        const res = await fetchApi(
+        const res = await fetchApi<Book>(
             fetch('/api/book', {
                 method: 'POST',
                 body: JSON.stringify(book),
@@ -106,7 +104,6 @@
                     'Content-Type': 'application/json',
                 },
             }),
-            false,
         )
         if (typeof res === 'string') {
             error = res
@@ -115,7 +112,7 @@
         }
         open = false
         page = Page.Search
-        $allBooks.push(book)
+        $allBooks.push(res)
         $allBooks = $allBooks.sort((a, b) => a.title.localeCompare(b.title))
     }
 
@@ -204,22 +201,24 @@
                         <Icon class="material-icons">search</Icon>
                     </Fab>
                 </SearchCard>
+                <SearchCard data="menu_book" clickable on:click={() => { selectedWork = -1; openInputPage() }}>
+                    Enter manually
+                </SearchCard>
                 {#each searchResults as stub, idx (stub.key.id)}
                     <SearchCard data={stub} on:click={() => openSelectEditionPage(stub.key, idx)} />
                 {/each}
             </div>
         {:else if page === Page.SelectEdition}
             <div id="search">
+                <SearchCard data="import_contacts" clickable on:click={() => openInputPage()}>
+                    Use general work data
+                </SearchCard>
                 {#each editions as edition (edition.key.id)}
                     <SearchCard data={edition} isEdition on:click={() => openInputPage(edition)} />
                 {/each}
             </div>
         {:else if page === Page.Input}
-            <BookEditor
-                on:editTag={() => (page = Page.EditTag)}
-                bind:tagToEdit
-                bind:book
-            />
+            <BookEditor on:editTag={() => (page = Page.EditTag)} bind:tagToEdit bind:book />
         {:else if page === Page.EditTag}
             <TagEditor
                 bind:tag={tagToEdit}
@@ -233,7 +232,7 @@
             on:click={() =>
                 page === Page.EditTag
                     ? (page = Page.Input)
-                    : page === Page.Input
+                    : page === Page.Input && selectedWork != -1
                     ? (page = Page.SelectEdition)
                     : (page = Page.Search)}
             disabled={page === Page.Search || page === Page.Loading}

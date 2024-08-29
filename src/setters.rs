@@ -229,7 +229,7 @@ async fn movie_delete_rating(
 async fn post_book(data: Data<AppState>, Json(book): Json<Book>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     let id = loop {
-        let new_id = rand::random::<u64>();
+        let new_id = rand::random::<u32>();
         if !data_lock.books.contains_key(&new_id) {
             break new_id;
         }
@@ -262,7 +262,7 @@ async fn patch_book(data: Data<AppState>, Json(book): Json<Book>) -> impl Respon
 }
 
 #[delete("/api/book/{id}")]
-async fn delete_book(data: Data<AppState>, id: Path<u64>) -> impl Responder {
+async fn delete_book(data: Data<AppState>, id: Path<u32>) -> impl Responder {
     let mut data_lock = data.0.lock().await;
     if data_lock.books.remove(&id).is_none() {
         return HttpResponse::NotFound().body(format!("book with ID {id} does not exist"));
@@ -276,7 +276,7 @@ async fn delete_book(data: Data<AppState>, id: Path<u64>) -> impl Responder {
 #[put("/api/book/{id}/reading")]
 async fn book_add_reading(
     data: Data<AppState>,
-    id: Path<u64>,
+    id: Path<u32>,
     Json(reading): Json<Reading>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;
@@ -293,7 +293,7 @@ async fn book_add_reading(
 #[delete("/api/book/{id}/reading/{idx}")]
 async fn book_delete_reading(
     data: Data<AppState>,
-    id: Path<u64>,
+    id: Path<u32>,
     idx: Path<usize>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;
@@ -322,7 +322,7 @@ struct SetRatingQuery {
 #[patch("/api/book/{id}/reading/{idx}")]
 async fn book_reading_set_for_date(
     data: Data<AppState>,
-    id: Path<u64>,
+    id: Path<u32>,
     idx: Path<usize>,
     Query(SetRatingQuery { date, pages }): Query<SetRatingQuery>,
 ) -> impl Responder {
@@ -350,7 +350,7 @@ async fn book_reading_set_for_date(
 #[put("/api/book/{id}/reading/{idx}/rating")]
 async fn book_reading_set_rating(
     data: Data<AppState>,
-    id: Path<u64>,
+    id: Path<u32>,
     idx: Path<usize>,
     Json(rating): Json<Rating>,
 ) -> impl Responder {
@@ -374,7 +374,7 @@ async fn book_reading_set_rating(
 #[delete("/api/book/{id}/reading/{idx}/rating")]
 async fn book_reading_delete_rating(
     data: Data<AppState>,
-    id: Path<u64>,
+    id: Path<u32>,
     idx: Path<usize>,
 ) -> impl Responder {
     let mut data_lock = data.0.lock().await;

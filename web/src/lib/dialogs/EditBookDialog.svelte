@@ -52,7 +52,7 @@
     async function deleteBook() {
         page = Page.Loading
         const res = await fetchApi(
-            fetch(`/api/book/${book.olid}`, {
+            fetch(`/api/book/${book.id}`, {
                 method: 'DELETE',
             }),
             false,

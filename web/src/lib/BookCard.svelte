@@ -6,11 +6,14 @@
     import Tags from './movie_card/Tags.svelte'
     import BottomButtons from './movie_card/BottomButtons.svelte'
     import EditBookDialog from './dialogs/EditBookDialog.svelte'
+    import ReleaseDate from './movie_card/ReleaseDate.svelte'
 
     export let book: Book
 
     let expanded = false
     let editDialogOpen = false
+
+    const coverUrl = `/api/covers/big/${book.id}${book.olid === null ? '' : `?olid=${book.olid}`}`
 </script>
 
 <EditBookDialog bind:open={editDialogOpen} book={structuredClone(book)} />
@@ -18,16 +21,16 @@
     class="card mdc-elevation--z4"
     class:expanded
     class:bg-poster={true}
-    style:--poster-url="url('https://covers.openlibrary.org/b/olid/{book.olid}-M.jpg')"
+    style:--poster-url="url('{coverUrl}')"
 >
     <div class="top-grid">
         <!-- {#if movie.poster !== null} -->
         <img
-            src="https://covers.openlibrary.org/b/olid/{book.olid}-M.jpg"
+            src={coverUrl}
             class="img"
             class:expanded
             loading="lazy"
-            alt="poster"
+            alt=""
         />
         <!-- {:else} -->
         <!--     <div class="img" class:expanded> -->
@@ -43,14 +46,11 @@
             <div class="small-grid">
                 <h3>{book.title}</h3>
                 <div class="hint"><Tags tags={book.tags} /></div>
-                <div class="hint" style="display: flex; gap: 1.5rem;">
-                    <div class="hint">{book.release_date}</div>
-                    <div class="hint">{book.end_page - book.start_page + 1} pages</div>
-                </div>
+                <span class="hint"><ReleaseDate release_date={book.release_date} /></span>
                 <div class="hint">
                     {book.authors.length > 0 ? book.authors.join(', ') : 'unknown author'}
                 </div>
-                <div class="hint">{book.isbn}</div>
+                <!-- TODO: read n times and/or personal rating -->
                 <BottomButtons bind:expanded bind:editDialogOpen />
             </div>
         {/if}
@@ -61,17 +61,10 @@
             <Tags tags={book.tags} />
 
             <span class="hint">Author{book.authors.length === 1 ? '' : 's'}:</span>
-            <span class="hint">{book.authors.length > 0 ? book.authors.join(', ') : 'unknown'}</span
-            >
+            <span class="hint">{book.authors.length > 0 ? book.authors.join(', ') : 'unknown'}</span>
 
             <span class="hint">Release Date:</span>
-            <span class="hint">{book.release_date}</span>
-
-            <span class="hint">Pages:</span>
-            <span class="hint">{book.end_page - book.start_page + 1} ({book.start_page}&nbsp;-&nbsp;{book.end_page})</span>
-
-            <span class="hint">ISBN:</span>
-            <span class="hint">{book.isbn}</span>
+            <ReleaseDate release_date={book.release_date} />
 
             <span class="hint">Community Score:</span>
             <span class="spaced-list">
@@ -86,12 +79,17 @@
                 {/if}
             </span>
 
+            <span class="hint">Internal ID:</span>
+            <span class="hint">{book.id}</span>
+
             <span class="hint">Links:</span>
             <span class="spaced-list">
-                <Button target="_blank" href="https://openlibrary.org/olid/{book.olid}">
-                    <Label>OpenLibrary</Label>
-                    <Icon class="material-icons">open_in_new</Icon>
-                </Button>
+                {#if book.olid !== null}
+                    <Button target="_blank" href="https://openlibrary.org/olid/{book.olid}">
+                        <Label>OpenLibrary</Label>
+                        <Icon class="material-icons">open_in_new</Icon>
+                    </Button>
+                {/if}
             </span>
         </div>
         <BottomButtons bind:expanded bind:editDialogOpen />
